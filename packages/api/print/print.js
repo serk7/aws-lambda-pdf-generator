@@ -11,8 +11,17 @@ const LambdaResponseGeneratorGzip = require('@barchart/common-node-js/aws/lambda
 
 const LambdaHelper = require('./../common/aws/LambdaHelper');
 
-module.exports.handler = (event, lambdaContext, callback) => {
-	LambdaHelper.process('Print HTML page', event, callback, async (parser, responder) => {
+module.exports.handler = async (event, lambdaContext) => {
+	return new Promise((resolve, reject) => {
+		return LambdaHelper.process('Print HTML page', event, (error, response) => {
+			if (error) {
+				reject(error);
+
+				return;
+			}
+
+			resolve(response);
+		}, async (parser, responder) => {
 		const logger = LambdaHelper.getLogger();
 
 		responder.addResponseGenerators([
@@ -67,7 +76,7 @@ module.exports.handler = (event, lambdaContext, callback) => {
 
 			await page.setContent(html, { waitUntil: 'networkidle0' });
 
-			context.pdf = await page.pdf(settings || { });
+			context.pdf = Buffer.from(await page.pdf(settings || { }));
 
 			logger.info(`Printed HTML layout for [ ${source} ] [ ${html.length} ] as PDF`);
 
@@ -93,5 +102,6 @@ module.exports.handler = (event, lambdaContext, callback) => {
 		return responder
 			.setHeader('Content-Type', 'application/pdf')
 			.send(context.pdf);
+		});
 	});
 };

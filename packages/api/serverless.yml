@@ -1,14 +1,20 @@
 service: serverless-pdf-generator
 
 build:
-  esbuild: false
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: false
+    target: node24
+    external:
+      - '@sparticuz/chromium'
 
 custom:
   stage: ${opt:stage, 'stage'}
 
   s3:
-    responseRegion: 'eu-central-1'
-    responseBucket: 'pdf-generator-serverless-responses'
+    responseRegion: 'eu-west-1'
+    responseBucket: 'pdf-generator-serverless-responses-test'
 
   cors:
     origin: '*'
@@ -33,9 +39,9 @@ custom:
 provider:
   name: aws
   runtime: nodejs24.x
-  region: eu-central-1
+  region: eu-west-1
   logRetentionInDays: 90
-  deploymentBucket: pdf-generator-serverless-deploy
+  deploymentBucket: pdf-generator-serverless-deploy-test
 
   environment:
     NODE_ENV: ${self:custom.stage}
@@ -59,19 +65,19 @@ package:
 
 layers:
   HeadlessChromium:
-    name: serverless-headless-chromium-${self:custom.stage}-v122
-    description: Layer for puppeteer to launch headless Chromium v122
+    name: serverless-headless-chromium-${self:custom.stage}-v143
+    description: Layer for puppeteer to launch headless Chromium v143
     compatibleRuntimes:
-      - nodejs20.x
+      - nodejs24.x
     package:
-      artifact: layers/chromium-v122.zip
+      artifact: layers/chromium-v143.0.4.zip
 
 functions:
   print:
     handler: print/print.handler
-    description: Generates a PDF from HTML (using Chromium v122)
+    description: Generates a PDF from HTML (using Chromium v143)
     memorySize: 2048
-    timeout: 30
+    timeout: 29
     layers:
       - { Ref: HeadlessChromiumLambdaLayer }
     events:

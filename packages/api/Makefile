@@ -2,22 +2,23 @@
 
 .DEFAULT_GOAL := all
 
-CHROME_REPO=https://github.com/Sparticuz/chromium.git
 LAYERS_FOLDER=layers
+CHROMIUM_VERSION=143.0.4
+BUILD_FOLDER=.chromium-layer-build
 
-all: ${LAYERS_FOLDER}/chromium-v122.zip
+all: ${LAYERS_FOLDER}/chromium-v${CHROMIUM_VERSION}.zip
 
-${LAYERS_FOLDER}/chromium-v122.zip:
-	@echo 'Downloading...' \
-	&& git clone $(CHROME_REPO) chromium-aws-lambda --depth 1 --branch v122.0.0 \
-	&& echo 'Making .zip archive...' \
-	&& cd chromium-aws-lambda \
-	&& rm -rf node_modules \
-    && npm i \
-	&& make chromium-aws-lambda.zip && mkdir -p ./../layers && mv chromium-aws-lambda.zip ./../${LAYERS_FOLDER}/chromium-v122.zip \
-	&& echo 'Removing unnecessary stuff...' \
-	&& cd ../ && rm -rf chromium-aws-lambda \
+${LAYERS_FOLDER}/chromium-v${CHROMIUM_VERSION}.zip:
+	@echo 'Building chromium layer...' \
+	&& rm -rf $(BUILD_FOLDER) \
+	&& mkdir -p $(BUILD_FOLDER)/nodejs \
+	&& npm install --prefix $(BUILD_FOLDER)/nodejs @sparticuz/chromium@$(CHROMIUM_VERSION) --omit=dev --omit=optional --no-package-lock --fund=false --bin-links=false \
+	&& mkdir -p ${LAYERS_FOLDER} \
+	&& cd $(BUILD_FOLDER) \
+	&& zip -9 --recurse-paths ../${LAYERS_FOLDER}/chromium-v$(CHROMIUM_VERSION).zip nodejs \
+	&& cd ../ \
+	&& rm -rf $(BUILD_FOLDER) \
 	&& echo 'Done'
 
 clean:
-	rm -rf layers && rm -rf chromium-aws-lambda
+	rm -rf layers && rm -rf chromium-aws-lambda && rm -rf $(BUILD_FOLDER)
