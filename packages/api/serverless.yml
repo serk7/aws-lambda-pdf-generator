@@ -1,13 +1,14 @@
 service: serverless-pdf-generator
 
-frameworkVersion: ">=3.38.0 <4.0.0"
+build:
+  esbuild: false
 
 custom:
   stage: ${opt:stage, 'stage'}
 
   s3:
-    responseRegion: 'us-east-1'
-    responseBucket: 'barchart-aws-lambda-responses'
+    responseRegion: 'eu-central-1'
+    responseBucket: 'pdf-generator-serverless-responses'
 
   cors:
     origin: '*'
@@ -31,9 +32,10 @@ custom:
 
 provider:
   name: aws
-  runtime: nodejs20.x
+  runtime: nodejs24.x
+  region: eu-central-1
   logRetentionInDays: 90
-  deploymentBucket: barchart-serverless-deployments
+  deploymentBucket: pdf-generator-serverless-deploy
 
   environment:
     NODE_ENV: ${self:custom.stage}
@@ -91,5 +93,4 @@ resources:
   Description: API for generating PDF from HTML
 
 plugins:
-  - serverless-webpack
   - serverless-apigw-binary
